@@ -8,12 +8,12 @@ import { useTheme } from '@/contexts/ThemeContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { useState } from 'react';
 import { getAllLectures } from '@/data/seed-data';
-import { toast } from "sonner"; // Import toast for messages
+import { toast } from "sonner";
 
 const Navbar = () => {
   const { language, setLanguage, t } = useLanguage();
   const { theme, toggleTheme } = useTheme();
-  const { user, isAdmin } = useAuth(); // We need these values
+  const { user, isAdmin, signOut } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   
@@ -21,22 +21,21 @@ const Navbar = () => {
   const [searchOpen, setSearchOpen] = useState(false);
   const isLandingPage = location.pathname === '/';
 
-  // --- NEW: Handle Admin Click ---
+  // --- Handle Admin Dashboard Entry ---
   const handleAdminClick = () => {
     if (!user) {
       toast.error("Please sign in to access the Admin Dashboard");
-      navigate("/auth"); // Go to login if not signed in
+      navigate("/auth", { state: { from: { pathname: "/admin" } } }); 
       return;
     }
     
     if (!isAdmin) {
-      toast.error("Access Denied: You are not an admin.");
+      toast.error("Access Denied: Authorized Admin Only.");
       return;
     }
 
-    navigate("/admin"); // Only go to page if allowed
+    navigate("/admin");
   };
-  // ------------------------------
 
   const handleSearch = (query: string) => {
     setSearchQuery(query);
@@ -53,7 +52,6 @@ const Navbar = () => {
     }
   };
 
-  const { signOut } = useAuth();
   const handleSignOut = async () => {
     await signOut();
     navigate("/");
@@ -67,25 +65,24 @@ const Navbar = () => {
           <span>{t('app.title')}</span>
         </Link>
 
-        {/* Desktop nav */}
+        {/* Desktop Search */}
         <div className="hidden md:flex items-center gap-2 flex-1 max-w-md">
           {!isLandingPage && (
              <div className="relative w-full">
-             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-             <Input
-               placeholder={t('nav.search')}
-               value={searchQuery}
-               onChange={e => setSearchQuery(e.target.value)}
-               onKeyDown={e => e.key === 'Enter' && handleSearch(searchQuery)}
-               className="pl-9"
-             />
-           </div>
+               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+               <Input
+                 placeholder={t('nav.search')}
+                 value={searchQuery}
+                 onChange={e => setSearchQuery(e.target.value)}
+                 onKeyDown={e => e.key === 'Enter' && handleSearch(searchQuery)}
+                 className="pl-9"
+               />
+             </div>
           )}
         </div>
 
         <div className="hidden md:flex items-center gap-1">
-          
-          {/* Admin Button - Uses handleAdminClick */}
+          {/* Admin Button (Always Visible) */}
           <Button 
             variant="outline" 
             size="sm" 
@@ -126,7 +123,7 @@ const Navbar = () => {
           )}
         </div>
 
-        {/* Mobile nav */}
+        {/* Mobile Menu */}
         <div className="md:hidden flex items-center gap-1">
           <Button variant="ghost" size="icon" onClick={() => setSearchOpen(!searchOpen)}>
             <Search className="h-4 w-4" />
@@ -140,13 +137,7 @@ const Navbar = () => {
             <SheetContent side="right" className="w-64">
               <SheetTitle className="sr-only">Menu</SheetTitle>
               <div className="flex flex-col gap-4 mt-8">
-                
-                {/* Mobile Admin Button - Uses handleAdminClick */}
-                <Button 
-                  variant="outline" 
-                  onClick={handleAdminClick}
-                  className="justify-start gap-2 text-destructive border-destructive"
-                >
+                <Button variant="outline" onClick={handleAdminClick} className="justify-start gap-2 text-destructive border-destructive">
                   <ShieldCheck className="h-4 w-4" />
                   {t('nav.admin')}
                 </Button>
