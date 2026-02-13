@@ -39,7 +39,7 @@ const Landing = () => {
             {t('landing.subtitle')}
           </p>
           <div className="flex flex-col sm:flex-row gap-3 justify-center">
-            <Button size="lg" onClick={() => navigate('/levels')} className="text-base px-8">
+            <Button size="lg" onClick={handleGetStarted} className="text-base px-8">
               {t('landing.getStarted')}
             </Button>
             <Button size="lg" variant="outline" onClick={() => navigate('/levels')} className="text-base px-8">
