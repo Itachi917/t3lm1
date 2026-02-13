@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom"; // Import useLocation
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -9,6 +9,7 @@ import { Label } from "@/components/ui/label";
 
 const Auth = () => {
   const navigate = useNavigate();
+  const location = useLocation(); // Get current location state
   const [isLoading, setIsLoading] = useState(false);
   const [isSignUp, setIsSignUp] = useState(false);
   const [email, setEmail] = useState("");
@@ -26,14 +27,18 @@ const Auth = () => {
         });
         if (error) throw error;
         toast.success("Account created! You can now log in.");
-        setIsSignUp(false); // Switch to login view
+        setIsSignUp(false); 
       } else {
         const { error } = await supabase.auth.signInWithPassword({
           email,
           password,
         });
         if (error) throw error;
-        navigate("/levels"); // Redirect after login
+        
+        // --- FIX: Check if we have a place to go back to, otherwise default to /levels ---
+        const from = location.state?.from?.pathname || "/levels";
+        navigate(from, { replace: true });
+        // ---------------------------------------------------------------------------------
       }
     } catch (error: any) {
       toast.error(error.message);
