@@ -29,23 +29,19 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   useEffect(() => {
     const initAuth = async () => {
-      // 1. Get initial session
-      const { data: { session } } = await supabase.auth.getSession();
-      setSession(session);
-      const currentUser = session?.user ?? null;
+      const { data: { session: initialSession } } = await supabase.auth.getSession();
+      setSession(initialSession);
+      const currentUser = initialSession?.user ?? null;
       setUser(currentUser);
-      
-      // 2. Check Admin Status based on email
       setIsAdmin(currentUser?.email === ADMIN_EMAIL);
       setLoading(false);
     };
 
     initAuth();
 
-    // 3. Listen for auth changes (login, logout, etc.)
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      setSession(session);
-      const currentUser = session?.user ?? null;
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, currentSession) => {
+      setSession(currentSession);
+      const currentUser = currentSession?.user ?? null;
       setUser(currentUser);
       setIsAdmin(currentUser?.email === ADMIN_EMAIL);
       setLoading(false);
