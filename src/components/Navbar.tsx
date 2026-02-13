@@ -8,17 +8,35 @@ import { useTheme } from '@/contexts/ThemeContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { useState } from 'react';
 import { getAllLectures } from '@/data/seed-data';
+import { toast } from "sonner"; // Import toast for messages
 
 const Navbar = () => {
   const { language, setLanguage, t } = useLanguage();
   const { theme, toggleTheme } = useTheme();
-  const { user, signOut } = useAuth(); // Removed isAdmin from here as we don't need it to hide the button anymore
+  const { user, isAdmin } = useAuth(); // We need these values
   const navigate = useNavigate();
   const location = useLocation();
   
   const [searchQuery, setSearchQuery] = useState('');
   const [searchOpen, setSearchOpen] = useState(false);
   const isLandingPage = location.pathname === '/';
+
+  // --- NEW: Handle Admin Click ---
+  const handleAdminClick = () => {
+    if (!user) {
+      toast.error("Please sign in to access the Admin Dashboard");
+      navigate("/auth"); // Go to login if not signed in
+      return;
+    }
+    
+    if (!isAdmin) {
+      toast.error("Access Denied: You are not an admin.");
+      return;
+    }
+
+    navigate("/admin"); // Only go to page if allowed
+  };
+  // ------------------------------
 
   const handleSearch = (query: string) => {
     setSearchQuery(query);
@@ -35,6 +53,7 @@ const Navbar = () => {
     }
   };
 
+  const { signOut } = useAuth();
   const handleSignOut = async () => {
     await signOut();
     navigate("/");
@@ -66,11 +85,11 @@ const Navbar = () => {
 
         <div className="hidden md:flex items-center gap-1">
           
-          {/* Admin Button - ALWAYS VISIBLE NOW */}
+          {/* Admin Button - Uses handleAdminClick */}
           <Button 
             variant="outline" 
             size="sm" 
-            onClick={() => navigate("/admin")}
+            onClick={handleAdminClick}
             className="gap-2 text-destructive border-destructive hover:bg-destructive/10 mr-2"
           >
             <ShieldCheck className="h-4 w-4" />
@@ -94,7 +113,6 @@ const Navbar = () => {
             {language === 'en' ? 'عربي' : 'EN'}
           </Button>
 
-          {/* Auth Buttons */}
           {user ? (
             <Button variant="ghost" size="sm" onClick={handleSignOut} className="ml-2">
               {t("nav.signOut")}
@@ -123,10 +141,10 @@ const Navbar = () => {
               <SheetTitle className="sr-only">Menu</SheetTitle>
               <div className="flex flex-col gap-4 mt-8">
                 
-                {/* Mobile Admin Button - ALWAYS VISIBLE */}
+                {/* Mobile Admin Button - Uses handleAdminClick */}
                 <Button 
                   variant="outline" 
-                  onClick={() => navigate("/admin")}
+                  onClick={handleAdminClick}
                   className="justify-start gap-2 text-destructive border-destructive"
                 >
                   <ShieldCheck className="h-4 w-4" />
