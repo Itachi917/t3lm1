@@ -1,21 +1,24 @@
-import { Link, useNavigate } from 'react-router-dom';
-import { Moon, Sun, Globe, Search, ShieldCheck, GraduationCap, Menu } from 'lucide-react'; // Added ShieldCheck icon
+import { Link, useNavigate, useLocation } from 'react-router-dom'; // Import useLocation
+import { Moon, Sun, Globe, Search, ShieldCheck, GraduationCap, Menu } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Sheet, SheetContent, SheetTrigger, SheetTitle } from '@/components/ui/sheet';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useTheme } from '@/contexts/ThemeContext';
-import { useAuth } from '@/contexts/AuthContext'; // Import useAuth
+import { useAuth } from '@/contexts/AuthContext';
 import { useState } from 'react';
 import { getAllLectures } from '@/data/seed-data';
 
 const Navbar = () => {
   const { language, setLanguage, t } = useLanguage();
   const { theme, toggleTheme } = useTheme();
-  const { user, isAdmin, signOut } = useAuth(); // Get auth data
+  const { user, isAdmin, signOut } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation(); // Get current page location
+  
   const [searchQuery, setSearchQuery] = useState('');
   const [searchOpen, setSearchOpen] = useState(false);
+  const isLandingPage = location.pathname === '/'; // Check if we are on Landing Page
 
   const handleSearch = (query: string) => {
     setSearchQuery(query);
@@ -47,20 +50,22 @@ const Navbar = () => {
 
         {/* Desktop nav */}
         <div className="hidden md:flex items-center gap-2 flex-1 max-w-md">
-          <div className="relative w-full">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input
-              placeholder={t('nav.search')}
-              value={searchQuery}
-              onChange={e => setSearchQuery(e.target.value)}
-              onKeyDown={e => e.key === 'Enter' && handleSearch(searchQuery)}
-              className="pl-9"
-            />
-          </div>
+          {!isLandingPage && (
+             <div className="relative w-full">
+             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+             <Input
+               placeholder={t('nav.search')}
+               value={searchQuery}
+               onChange={e => setSearchQuery(e.target.value)}
+               onKeyDown={e => e.key === 'Enter' && handleSearch(searchQuery)}
+               className="pl-9"
+             />
+           </div>
+          )}
         </div>
 
         <div className="hidden md:flex items-center gap-1">
-          {/* Admin Button - Only visible if isAdmin is true */}
+          {/* Admin Button */}
           {isAdmin && (
             <Button 
               variant="outline" 
@@ -69,7 +74,7 @@ const Navbar = () => {
               className="gap-2 text-destructive border-destructive hover:bg-destructive/10 mr-2"
             >
               <ShieldCheck className="h-4 w-4" />
-              Admin
+              {t('nav.admin')}
             </Button>
           )}
 
@@ -96,9 +101,12 @@ const Navbar = () => {
               {t("nav.signOut")}
             </Button>
           ) : (
-            <Button variant="default" size="sm" onClick={() => navigate("/auth")} className="ml-2">
-              {t("nav.signIn")}
-            </Button>
+            // Only show Sign In if NOT on landing page
+            !isLandingPage && (
+              <Button variant="default" size="sm" onClick={() => navigate("/auth")} className="ml-2">
+                {t("nav.signIn")}
+              </Button>
+            )
           )}
         </div>
 
@@ -116,7 +124,6 @@ const Navbar = () => {
             <SheetContent side="right" className="w-64">
               <SheetTitle className="sr-only">Menu</SheetTitle>
               <div className="flex flex-col gap-4 mt-8">
-                {/* Mobile Admin Link */}
                 {isAdmin && (
                   <Button 
                     variant="outline" 
@@ -124,7 +131,7 @@ const Navbar = () => {
                     className="justify-start gap-2 text-destructive border-destructive"
                   >
                     <ShieldCheck className="h-4 w-4" />
-                    Admin Dashboard
+                    {t('nav.admin')}
                   </Button>
                 )}
 
@@ -146,12 +153,12 @@ const Navbar = () => {
                   {language === 'en' ? 'عربي' : 'English'}
                 </Button>
 
-                {/* Mobile Auth Buttons */}
                 {user ? (
                   <Button variant="ghost" className="justify-start" onClick={handleSignOut}>
                     {t("nav.signOut")}
                   </Button>
                 ) : (
+                  // Sign In for Mobile
                   <Button variant="default" className="justify-start" onClick={() => navigate("/auth")}>
                     {t("nav.signIn")}
                   </Button>
