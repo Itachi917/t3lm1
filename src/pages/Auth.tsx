@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useNavigate, useLocation } from "react-router-dom"; // Import useLocation
+import { useNavigate, useLocation } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -9,11 +9,13 @@ import { Label } from "@/components/ui/label";
 
 const Auth = () => {
   const navigate = useNavigate();
-  const location = useLocation(); // Get current location state
+  const location = useLocation();
   const [isLoading, setIsLoading] = useState(false);
   const [isSignUp, setIsSignUp] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+
+  const ADMIN_EMAIL = "asm9776611@gmail.com";
 
   const handleAuth = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -21,24 +23,24 @@ const Auth = () => {
 
     try {
       if (isSignUp) {
-        const { error } = await supabase.auth.signUp({
-          email,
-          password,
-        });
+        const { error } = await supabase.auth.signUp({ email, password });
         if (error) throw error;
         toast.success("Account created! You can now log in.");
         setIsSignUp(false); 
       } else {
-        const { error } = await supabase.auth.signInWithPassword({
-          email,
-          password,
-        });
+        const { data, error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) throw error;
         
-        // --- FIX: Check if we have a place to go back to, otherwise default to /levels ---
-        const from = location.state?.from?.pathname || "/levels";
-        navigate(from, { replace: true });
-        // ---------------------------------------------------------------------------------
+        // --- REDIRECTION LOGIC ---
+        // 1. If admin logs in, go straight to admin dashboard
+        if (data.user?.email === ADMIN_EMAIL) {
+          navigate("/admin", { replace: true });
+        } 
+        // 2. Otherwise, go to intended page or levels
+        else {
+          const from = location.state?.from?.pathname || "/levels";
+          navigate(from, { replace: true });
+        }
       }
     } catch (error: any) {
       toast.error(error.message);
@@ -84,11 +86,7 @@ const Auth = () => {
               />
             </div>
             <Button className="w-full" type="submit" disabled={isLoading}>
-              {isLoading
-                ? "Loading..."
-                : isSignUp
-                ? "Sign Up"
-                : "Sign In"}
+              {isLoading ? "Loading..." : isSignUp ? "Sign Up" : "Sign In"}
             </Button>
           </form>
           <div className="mt-4 text-center text-sm">
@@ -96,9 +94,7 @@ const Auth = () => {
               onClick={() => setIsSignUp(!isSignUp)}
               className="text-primary hover:underline font-medium"
             >
-              {isSignUp
-                ? "Already have an account? Sign in"
-                : "Don't have an account? Sign up"}
+              {isSignUp ? "Already have an account? Sign in" : "Don't have an account? Sign up"}
             </button>
           </div>
         </CardContent>
