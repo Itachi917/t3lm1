@@ -1,16 +1,18 @@
 import { Link, useNavigate } from 'react-router-dom';
-import { Moon, Sun, Globe, Search, User, GraduationCap, Menu } from 'lucide-react';
+import { Moon, Sun, Globe, Search, ShieldCheck, GraduationCap, Menu } from 'lucide-react'; // Added ShieldCheck icon
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Sheet, SheetContent, SheetTrigger, SheetTitle } from '@/components/ui/sheet';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useTheme } from '@/contexts/ThemeContext';
+import { useAuth } from '@/contexts/AuthContext'; // Import useAuth
 import { useState } from 'react';
 import { getAllLectures } from '@/data/seed-data';
 
 const Navbar = () => {
   const { language, setLanguage, t } = useLanguage();
   const { theme, toggleTheme } = useTheme();
+  const { user, isAdmin, signOut } = useAuth(); // Get auth data
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState('');
   const [searchOpen, setSearchOpen] = useState(false);
@@ -28,6 +30,11 @@ const Navbar = () => {
       setSearchQuery('');
       setSearchOpen(false);
     }
+  };
+
+  const handleSignOut = async () => {
+    await signOut();
+    navigate("/");
   };
 
   return (
@@ -53,12 +60,27 @@ const Navbar = () => {
         </div>
 
         <div className="hidden md:flex items-center gap-1">
+          {/* Admin Button - Only visible if isAdmin is true */}
+          {isAdmin && (
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={() => navigate("/admin")}
+              className="gap-2 text-destructive border-destructive hover:bg-destructive/10 mr-2"
+            >
+              <ShieldCheck className="h-4 w-4" />
+              Admin
+            </Button>
+          )}
+
           <Button variant="ghost" size="sm" asChild>
             <Link to="/levels">{t('nav.levels')}</Link>
           </Button>
+          
           <Button variant="ghost" size="icon" onClick={toggleTheme}>
             {theme === 'light' ? <Moon className="h-4 w-4" /> : <Sun className="h-4 w-4" />}
           </Button>
+          
           <Button
             variant="ghost"
             size="sm"
@@ -67,6 +89,17 @@ const Navbar = () => {
             <Globe className="h-4 w-4 mr-1" />
             {language === 'en' ? 'عربي' : 'EN'}
           </Button>
+
+          {/* Auth Buttons */}
+          {user ? (
+            <Button variant="ghost" size="sm" onClick={handleSignOut} className="ml-2">
+              {t("nav.signOut")}
+            </Button>
+          ) : (
+            <Button variant="default" size="sm" onClick={() => navigate("/auth")} className="ml-2">
+              {t("nav.signIn")}
+            </Button>
+          )}
         </div>
 
         {/* Mobile nav */}
@@ -83,13 +116,27 @@ const Navbar = () => {
             <SheetContent side="right" className="w-64">
               <SheetTitle className="sr-only">Menu</SheetTitle>
               <div className="flex flex-col gap-4 mt-8">
+                {/* Mobile Admin Link */}
+                {isAdmin && (
+                  <Button 
+                    variant="outline" 
+                    onClick={() => navigate("/admin")}
+                    className="justify-start gap-2 text-destructive border-destructive"
+                  >
+                    <ShieldCheck className="h-4 w-4" />
+                    Admin Dashboard
+                  </Button>
+                )}
+
                 <Button variant="ghost" asChild className="justify-start">
                   <Link to="/levels">{t('nav.levels')}</Link>
                 </Button>
+                
                 <Button variant="ghost" className="justify-start" onClick={toggleTheme}>
                   {theme === 'light' ? <Moon className="h-4 w-4 mr-2" /> : <Sun className="h-4 w-4 mr-2" />}
                   {theme === 'light' ? t('theme.dark') : t('theme.light')}
                 </Button>
+                
                 <Button
                   variant="ghost"
                   className="justify-start"
@@ -98,6 +145,17 @@ const Navbar = () => {
                   <Globe className="h-4 w-4 mr-2" />
                   {language === 'en' ? 'عربي' : 'English'}
                 </Button>
+
+                {/* Mobile Auth Buttons */}
+                {user ? (
+                  <Button variant="ghost" className="justify-start" onClick={handleSignOut}>
+                    {t("nav.signOut")}
+                  </Button>
+                ) : (
+                  <Button variant="default" className="justify-start" onClick={() => navigate("/auth")}>
+                    {t("nav.signIn")}
+                  </Button>
+                )}
               </div>
             </SheetContent>
           </Sheet>
