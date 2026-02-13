@@ -12,6 +12,7 @@ import SubjectCatalog from "./pages/SubjectCatalog";
 import SubjectDashboard from "./pages/SubjectDashboard";
 import LectureRoom from "./pages/LectureRoom";
 import NotFound from "./pages/NotFound";
+import Admin from "./pages/Admin";
 
 const queryClient = new QueryClient();
 
@@ -31,6 +32,7 @@ const App = () => (
               <Route path="/level/:levelId/subject/:subjectId" element={<SubjectDashboard />} />
               <Route path="/level/:levelId/subject/:subjectId/lecture/:lectureId" element={<LectureRoom />} />
               <Route path="*" element={<NotFound />} />
+              <Route path="/admin" element={<Admin />} />
             </Routes>
           </BrowserRouter>
         </TooltipProvider>
