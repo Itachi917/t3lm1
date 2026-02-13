@@ -13,6 +13,8 @@ import SubjectDashboard from "./pages/SubjectDashboard";
 import LectureRoom from "./pages/LectureRoom";
 import NotFound from "./pages/NotFound";
 import Admin from "./pages/Admin";
+import { AuthProvider } from "@/contexts/AuthContext";
+import Auth from "@/pages/Auth";
 
 const queryClient = new QueryClient();
 
@@ -27,6 +29,7 @@ const App = () => (
             <Navbar />
             <Routes>
               <Route path="/" element={<Landing />} />
+              <Route path="/auth" element={<Auth />} />
               <Route path="/levels" element={<LevelSelection />} />
               <Route path="/level/:levelId" element={<SubjectCatalog />} />
               <Route path="/level/:levelId/subject/:subjectId" element={<SubjectDashboard />} />
