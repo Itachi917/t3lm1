@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom"; // Import useNavigate
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -6,14 +7,42 @@ import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
-import { levels } from "@/data/seed-data"; // Importing your static data to seed it
+import { levels } from "@/data/seed-data"; 
 import { Subject, Lecture } from "@/data/seed-data";
+import { useAuth } from "@/contexts/AuthContext"; // Import useAuth
 
 const Admin = () => {
   const [jsonInput, setJsonInput] = useState("");
-  const [loading, setLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(false); // Renamed to avoid conflict with auth loading
+  
+  const { user, isAdmin, loading } = useAuth(); // Get auth state
+  const navigate = useNavigate();
 
-  // Function to upload a single subject and its lectures
+  // --- SECURITY CHECK ---
+  useEffect(() => {
+    // Wait for auth to finish loading
+    if (!loading) {
+      if (!user) {
+        toast.error("You must log in to access the Admin Dashboard");
+        navigate("/auth");
+        return;
+      }
+      if (!isAdmin) {
+        toast.error("Access Denied: You do not have admin permissions.");
+        navigate("/");
+        return;
+      }
+    }
+  }, [user, isAdmin, loading, navigate]);
+
+  // If still checking auth, show a loading state
+  if (loading) {
+    return <div className="flex justify-center items-center h-screen">Checking permissions...</div>;
+  }
+
+  // If we made it here, the user is an Admin
+  // -----------------------
+
   const uploadSubject = async (subject: Subject) => {
     // 1. Insert Subject
     const { error: subjectError } = await supabase.from("subjects").upsert({
@@ -36,7 +65,6 @@ const Admin = () => {
         title_ar: lec.titleAr,
         summary: lec.summary,
         summary_ar: lec.summaryAr,
-        // Supabase expects JSON objects, strict casting helps TS
         flashcards: lec.flashcards as any, 
         quiz: lec.quiz as any,
       }));
@@ -51,10 +79,9 @@ const Admin = () => {
 
   const handleJsonImport = async () => {
     try {
-      setLoading(true);
+      setIsLoading(true);
       const parsed = JSON.parse(jsonInput);
       
-      // Handle both single object or array
       const subjects = Array.isArray(parsed) ? parsed : [parsed];
 
       for (const sub of subjects) {
@@ -66,13 +93,13 @@ const Admin = () => {
     } catch (e: any) {
       toast.error(`Import failed: ${e.message}`);
     } finally {
-      setLoading(false);
+      setIsLoading(false);
     }
   };
 
   const handleSeedDatabase = async () => {
     try {
-      setLoading(true);
+      setIsLoading(true);
       const allSubjects = levels.flatMap((l) => l.subjects);
       
       let count = 0;
@@ -85,7 +112,7 @@ const Admin = () => {
     } catch (e: any) {
       toast.error(`Seeding failed: ${e.message}`);
     } finally {
-      setLoading(false);
+      setIsLoading(false);
     }
   };
 
@@ -114,8 +141,8 @@ const Admin = () => {
                 placeholder='{ "id": "math101", "name": "Math", ... }'
                 className="min-h-[300px] font-mono"
               />
-              <Button onClick={handleJsonImport} disabled={loading}>
-                {loading ? "Importing..." : "Import JSON"}
+              <Button onClick={handleJsonImport} disabled={isLoading}>
+                {isLoading ? "Importing..." : "Import JSON"}
               </Button>
             </CardContent>
           </Card>
@@ -133,10 +160,10 @@ const Admin = () => {
               </p>
               <Button 
                 onClick={handleSeedDatabase} 
-                disabled={loading}
+                disabled={isLoading}
                 variant="destructive"
               >
-                {loading ? "Seeding..." : "Upload All Seed Data to Supabase"}
+                {isLoading ? "Seeding..." : "Upload All Seed Data to Supabase"}
               </Button>
             </CardContent>
           </Card>
