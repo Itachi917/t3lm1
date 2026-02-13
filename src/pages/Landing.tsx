@@ -3,10 +3,12 @@ import { GraduationCap, BookOpen, Brain, Languages } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { useAuth } from '@/contexts/AuthContext';
 
 const Landing = () => {
   const navigate = useNavigate();
   const { t } = useLanguage();
+  const { user } = useAuth();
 
   const features = [
     { icon: BookOpen, title: 'Summary Notes', titleAr: 'ملخص الملاحظات', desc: 'Clean, organized lecture notes', descAr: 'ملاحظات محاضرات منظمة ونظيفة' },
@@ -14,6 +16,14 @@ const Landing = () => {
     { icon: Languages, title: 'Bilingual Support', titleAr: 'دعم ثنائي اللغة', desc: 'English & Arabic content', descAr: 'محتوى بالإنجليزية والعربية' },
   ];
 
+  const handleGetStarted = () => {
+    if (user) {
+      navigate('/levels');
+    } else {
+      navigate('/auth');
+    }
+  };
+  
   return (
     <div className="min-h-[calc(100vh-4rem)] flex flex-col">
       {/* Hero */}
