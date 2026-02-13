@@ -1,50 +1,38 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom"; // Import useNavigate
-import { useQuery } from "@tanstack/react-query";
+import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
-import { levels } from "@/data/seed-data"; 
-import { Subject, Lecture } from "@/data/seed-data";
-import { useAuth } from "@/contexts/AuthContext"; // Import useAuth
+import { levels, Subject, Lecture } from "@/data/seed-data";
+import { useAuth } from "@/contexts/AuthContext";
 
 const Admin = () => {
   const [jsonInput, setJsonInput] = useState("");
-  const [isLoading, setIsLoading] = useState(false); // Renamed to avoid conflict with auth loading
+  const [isLoading, setIsLoading] = useState(false);
   
-  const { user, isAdmin, loading } = useAuth(); // Get auth state
+  const { user, isAdmin, loading } = useAuth();
   const navigate = useNavigate();
 
-  // --- SECURITY CHECK ---
+  // Redirect if somehow reached this page without permission
   useEffect(() => {
-    // Wait for auth to finish loading
     if (!loading) {
-      if (!user) {
-        toast.error("You must log in to access the Admin Dashboard");
-        navigate("/auth");
-        return;
-      }
-      if (!isAdmin) {
-        toast.error("Access Denied: You do not have admin permissions.");
-        navigate("/");
-        return;
-      }
+      if (!user) navigate("/auth");
+      else if (!isAdmin) navigate("/");
     }
   }, [user, isAdmin, loading, navigate]);
 
-  // If still checking auth, show a loading state
-  if (loading) {
-    return <div className="flex justify-center items-center h-screen">Checking permissions...</div>;
-  }
+  // Just return null instead of a blocking "Checking permissions..." text
+  // This prevents the flickering or stuck text
+  if (loading) return null;
 
-  // If we made it here, the user is an Admin
-  // -----------------------
+  // Render the page normally...
+  // (The rest of your file logic remains the same below)
 
   const uploadSubject = async (subject: Subject) => {
-    // 1. Insert Subject
+    // ... same as before
     const { error: subjectError } = await supabase.from("subjects").upsert({
       id: subject.id,
       name: subject.name,
@@ -53,10 +41,8 @@ const Admin = () => {
       icon: subject.icon,
       level_tag: subject.levelTag,
     });
-
     if (subjectError) throw new Error(`Subject Error: ${subjectError.message}`);
 
-    // 2. Insert Lectures
     if (subject.lectures && subject.lectures.length > 0) {
       const lecturesToInsert = subject.lectures.map((lec: Lecture) => ({
         id: lec.id,
@@ -68,11 +54,9 @@ const Admin = () => {
         flashcards: lec.flashcards as any, 
         quiz: lec.quiz as any,
       }));
-
       const { error: lectureError } = await supabase
         .from("lectures")
         .upsert(lecturesToInsert);
-
       if (lectureError) throw new Error(`Lecture Error: ${lectureError.message}`);
     }
   };
@@ -81,13 +65,10 @@ const Admin = () => {
     try {
       setIsLoading(true);
       const parsed = JSON.parse(jsonInput);
-      
       const subjects = Array.isArray(parsed) ? parsed : [parsed];
-
       for (const sub of subjects) {
         await uploadSubject(sub);
       }
-      
       toast.success("Successfully imported JSON data!");
       setJsonInput("");
     } catch (e: any) {
@@ -101,13 +82,11 @@ const Admin = () => {
     try {
       setIsLoading(true);
       const allSubjects = levels.flatMap((l) => l.subjects);
-      
       let count = 0;
       for (const sub of allSubjects) {
         await uploadSubject(sub);
         count++;
       }
-      
       toast.success(`Database seeded with ${count} subjects from seed-data.ts`);
     } catch (e: any) {
       toast.error(`Seeding failed: ${e.message}`);
@@ -133,12 +112,12 @@ const Admin = () => {
             </CardHeader>
             <CardContent className="space-y-4">
               <p className="text-sm text-muted-foreground">
-                Paste a JSON object matching the <code>Subject</code> interface (including nested lectures).
+                Paste a JSON object matching the <code>Subject</code> interface.
               </p>
               <Textarea 
                 value={jsonInput}
                 onChange={(e) => setJsonInput(e.target.value)}
-                placeholder='{ "id": "math101", "name": "Math", ... }'
+                placeholder='{ "id": "math101", ... }'
                 className="min-h-[300px] font-mono"
               />
               <Button onClick={handleJsonImport} disabled={isLoading}>
@@ -155,15 +134,14 @@ const Admin = () => {
             </CardHeader>
             <CardContent className="space-y-4">
               <p className="text-sm text-muted-foreground">
-                This will read all data currently in <code>src/data/seed-data.ts</code> and upload it to your Supabase database.
-                It will update existing records if IDs match.
+                Upload <code>src/data/seed-data.ts</code> to Supabase.
               </p>
               <Button 
                 onClick={handleSeedDatabase} 
                 disabled={isLoading}
                 variant="destructive"
               >
-                {isLoading ? "Seeding..." : "Upload All Seed Data to Supabase"}
+                {isLoading ? "Seeding..." : "Upload All Seed Data"}
               </Button>
             </CardContent>
           </Card>
