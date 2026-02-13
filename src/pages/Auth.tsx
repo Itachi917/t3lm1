@@ -31,13 +31,11 @@ const Auth = () => {
         const { data, error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) throw error;
         
-        // --- REDIRECTION LOGIC ---
-        // 1. If admin logs in, go straight to admin dashboard
+        // --- ADMIN REDIRECT LOGIC ---
         if (data.user?.email === ADMIN_EMAIL) {
+          toast.success("Welcome back, Admin!");
           navigate("/admin", { replace: true });
-        } 
-        // 2. Otherwise, go to intended page or levels
-        else {
+        } else {
           const from = location.state?.from?.pathname || "/levels";
           navigate(from, { replace: true });
         }
@@ -57,46 +55,26 @@ const Auth = () => {
             {isSignUp ? "Create an Account" : "Welcome Back"}
           </CardTitle>
           <CardDescription>
-            {isSignUp
-              ? "Enter your details to get started"
-              : "Enter your credentials to access your account"}
+            {isSignUp ? "Join our learning platform" : "Log in to your account"}
           </CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleAuth} className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="email">Email</Label>
-              <Input
-                id="email"
-                type="email"
-                placeholder="m@example.com"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-              />
+              <Input id="email" type="email" value={email} onChange={e => setEmail(e.target.value)} required />
             </div>
             <div className="space-y-2">
               <Label htmlFor="password">Password</Label>
-              <Input
-                id="password"
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-              />
+              <Input id="password" type="password" value={password} onChange={e => setPassword(e.target.value)} required />
             </div>
             <Button className="w-full" type="submit" disabled={isLoading}>
               {isLoading ? "Loading..." : isSignUp ? "Sign Up" : "Sign In"}
             </Button>
           </form>
-          <div className="mt-4 text-center text-sm">
-            <button
-              onClick={() => setIsSignUp(!isSignUp)}
-              className="text-primary hover:underline font-medium"
-            >
-              {isSignUp ? "Already have an account? Sign in" : "Don't have an account? Sign up"}
-            </button>
-          </div>
+          <button onClick={() => setIsSignUp(!isSignUp)} className="w-full mt-4 text-sm text-primary hover:underline">
+            {isSignUp ? "Already have an account? Sign in" : "Don't have an account? Sign up"}
+          </button>
         </CardContent>
       </Card>
     </div>
