@@ -1,4 +1,4 @@
-import { Link, useNavigate, useLocation } from 'react-router-dom'; // Import useLocation
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { Moon, Sun, Globe, Search, ShieldCheck, GraduationCap, Menu } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -12,13 +12,13 @@ import { getAllLectures } from '@/data/seed-data';
 const Navbar = () => {
   const { language, setLanguage, t } = useLanguage();
   const { theme, toggleTheme } = useTheme();
-  const { user, isAdmin, signOut } = useAuth();
+  const { user, signOut } = useAuth(); // Removed isAdmin from here as we don't need it to hide the button anymore
   const navigate = useNavigate();
-  const location = useLocation(); // Get current page location
+  const location = useLocation();
   
   const [searchQuery, setSearchQuery] = useState('');
   const [searchOpen, setSearchOpen] = useState(false);
-  const isLandingPage = location.pathname === '/'; // Check if we are on Landing Page
+  const isLandingPage = location.pathname === '/';
 
   const handleSearch = (query: string) => {
     setSearchQuery(query);
@@ -65,18 +65,17 @@ const Navbar = () => {
         </div>
 
         <div className="hidden md:flex items-center gap-1">
-          {/* Admin Button */}
-          {isAdmin && (
-            <Button 
-              variant="outline" 
-              size="sm" 
-              onClick={() => navigate("/admin")}
-              className="gap-2 text-destructive border-destructive hover:bg-destructive/10 mr-2"
-            >
-              <ShieldCheck className="h-4 w-4" />
-              {t('nav.admin')}
-            </Button>
-          )}
+          
+          {/* Admin Button - ALWAYS VISIBLE NOW */}
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={() => navigate("/admin")}
+            className="gap-2 text-destructive border-destructive hover:bg-destructive/10 mr-2"
+          >
+            <ShieldCheck className="h-4 w-4" />
+            {t('nav.admin')}
+          </Button>
 
           <Button variant="ghost" size="sm" asChild>
             <Link to="/levels">{t('nav.levels')}</Link>
@@ -101,7 +100,6 @@ const Navbar = () => {
               {t("nav.signOut")}
             </Button>
           ) : (
-            // Only show Sign In if NOT on landing page
             !isLandingPage && (
               <Button variant="default" size="sm" onClick={() => navigate("/auth")} className="ml-2">
                 {t("nav.signIn")}
@@ -124,16 +122,16 @@ const Navbar = () => {
             <SheetContent side="right" className="w-64">
               <SheetTitle className="sr-only">Menu</SheetTitle>
               <div className="flex flex-col gap-4 mt-8">
-                {isAdmin && (
-                  <Button 
-                    variant="outline" 
-                    onClick={() => navigate("/admin")}
-                    className="justify-start gap-2 text-destructive border-destructive"
-                  >
-                    <ShieldCheck className="h-4 w-4" />
-                    {t('nav.admin')}
-                  </Button>
-                )}
+                
+                {/* Mobile Admin Button - ALWAYS VISIBLE */}
+                <Button 
+                  variant="outline" 
+                  onClick={() => navigate("/admin")}
+                  className="justify-start gap-2 text-destructive border-destructive"
+                >
+                  <ShieldCheck className="h-4 w-4" />
+                  {t('nav.admin')}
+                </Button>
 
                 <Button variant="ghost" asChild className="justify-start">
                   <Link to="/levels">{t('nav.levels')}</Link>
@@ -158,7 +156,6 @@ const Navbar = () => {
                     {t("nav.signOut")}
                   </Button>
                 ) : (
-                  // Sign In for Mobile
                   <Button variant="default" className="justify-start" onClick={() => navigate("/auth")}>
                     {t("nav.signIn")}
                   </Button>
