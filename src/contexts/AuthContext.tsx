@@ -24,52 +24,30 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [isAdmin, setIsAdmin] = useState<boolean>(false);
   const [loading, setLoading] = useState(true);
 
-  // Helper function to fetch the user's profile and check admin status
-  const fetchProfile = async (userId: string) => {
-    try {
-      const { data } = await supabase
-        .from('profiles')
-        .select('is_admin')
-        .eq('user_id', userId)
-        .single();
-      
-      if (data) {
-        setIsAdmin(data.is_admin || false);
-      }
-    } catch (error) {
-      console.error('Error fetching profile:', error);
-    }
-  };
+  // YOUR FIXED ADMIN EMAIL
+  const ADMIN_EMAIL = "asm9776611@gmail.com";
 
   useEffect(() => {
     const initAuth = async () => {
       // 1. Get initial session
       const { data: { session } } = await supabase.auth.getSession();
       setSession(session);
-      setUser(session?.user ?? null);
+      const currentUser = session?.user ?? null;
+      setUser(currentUser);
       
-      // 2. If user is logged in, check Admin Status immediately
-      if (session?.user) {
-        await fetchProfile(session.user.id);
-      }
-      
-      // 3. ONLY THEN set loading to false to unblock the UI
+      // 2. Check Admin Status based on email
+      setIsAdmin(currentUser?.email === ADMIN_EMAIL);
       setLoading(false);
     };
 
     initAuth();
 
-    // 4. Listen for auth changes (login, logout, etc.)
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
+    // 3. Listen for auth changes (login, logout, etc.)
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       setSession(session);
-      setUser(session?.user ?? null);
-      
-      if (session?.user) {
-        await fetchProfile(session.user.id);
-      } else {
-        setIsAdmin(false); // Reset admin status on logout
-      }
-      
+      const currentUser = session?.user ?? null;
+      setUser(currentUser);
+      setIsAdmin(currentUser?.email === ADMIN_EMAIL);
       setLoading(false);
     });
 
